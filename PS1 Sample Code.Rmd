@@ -1,0 +1,57 @@
+---
+title: "PS 1 Sample Code"
+output:
+  html_document:
+    df_print: paged
+---
+
+```{r}
+library(readxl) #reading excel files
+library(tidyverse)
+library(mFilter) #Package used for hp filter
+library(cowplot) #Allows for side by side graphs
+```
+
+## Read data from Excel file and create a logged measure of real GDP
+
+```{r}
+project_path <- "C:/Users/Neil/Google Drive/Pitt/TA/ECON 2813/Problem Sets/PS1" 
+setwd(project_path)
+gdp_data <- read_excel("GDP_pc.xlsx")
+# Make real gdp column name easier to read
+gdp_data<-rename(gdp_data,gdp=`Real gross domestic product per capita, Chained 2012 Dollars, Annual, Seasonally Adjusted Annual Rate FRED`)
+#Find log Real GDP
+gdp_data$lgdp<-log(gdp_data$gdp)
+
+
+```
+
+## Use Hodrick-Prescott filter to estimate cylce and secular components of time series.
+```{r}
+gdp.hp<-hpfilter(gdp_data$lgdp, freq = 100,type = "lambda")
+gdp_data$gdp_T<-gdp.hp$trend
+gdp_data$gdp_C<-gdp.hp$cycle
+head(gdp_data)
+```
+
+
+## Draw two figures. 
+* On the first, draw the raw data and the secular trend estimate. 
+* On the second draw the GDP cycle estimate.
+
+
+```{r}
+plot1<-ggplot(data=gdp_data)+ 
+geom_line(aes(x=ryear,y=lgdp,color='Log GDP'),size=1.5) + geom_line(aes(x=ryear,y=gdp_T,color='Log GDP Secular'),linetype=2,size=1.5) +xlab("Year")+ylab("")+scale_colour_manual(name="",values=c('Log GDP'='blue','Log GDP Secular'='red'))+ggtitle('GDP Trend')+theme(plot.title = element_text(hjust = 0.5))
+```
+```{r}
+plot2<-ggplot(data=gdp_data)+ 
+geom_line(aes(x=ryear,y=gdp_C,color='Log GDP Cycle'),size=1.5,linetype=2)  +xlab("Year")+ylab("")+scale_colour_manual(name="",values=c('Log GDP Cycle'='blue'))+ggtitle('GDP Cycle')+theme(plot.title = element_text(hjust = 0.5))
+```
+
+
+
+```{r}
+plot_grid(plot1, plot2,ncol = 1,align = 'v')
+```
+
