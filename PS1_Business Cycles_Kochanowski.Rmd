@@ -10,7 +10,8 @@ library(readxl) #reading excel files
 library(tidyverse)
 library(haven)
 library(dplyr)
-install.packages("mFilter")
+library(ggplot2)
+#install.packages("mFilter")
 library(mFilter) #Package used for hp filter
 library(cowplot) #Allows for side by side graphs
 ```
@@ -24,7 +25,7 @@ library(readxl)
 original <- read_excel("/Users/Kiersten/Documents/School/Session 3/Macro/Measuring_Business_Cycles_HP-Filter/Data/usg_data_annual.xls")
 #View(original)
 #Select United States and South Korea data
-US<- filter(original, Country_Name=="United States" | Country_Name=="Korea, Rep.")
+GDP1<- filter(original, Country_Name=="United States" | Country_Name=="Korea, Rep.")
 #View(GDP1)
 
 #Filter for relevant business-cycle statistics
@@ -32,7 +33,7 @@ GDP2 <- filter(GDP1, Indicator_Code=="NY.GDP.PCAP.KN" | Indicator_Code=="NE.CON.
 #View(GDP2)
 ```
 
-## Restructuring data so year is its own variable
+## Restructuring data so year is its own unique variable
 South Korea data
 
 ```{r}
@@ -67,11 +68,26 @@ country2 <- t(country)
 #View(country2)
 SKorea6 <- cbind(SKorea5, country2)
 #View(SKorea6)
-#Create year variable 
+
+#Name year variable 
 SKorea_final <- tibble::rownames_to_column(SKorea6, "YEAR")
 SKorea_final <- rename(SKorea_final, COUNTRY = country2)
 SKorea_final <- select(SKorea_final, "YEAR", "COUNTRY", "NY.GDP.PCAP.KN", "NE.GDI.TOTL.ZS", "NE.CON.GOVT.ZS", "NE.IMP.GNFS.ZS", "NE.EXP.GNFS.ZS", "NE.CON.PETC.ZS")
 View(SKorea_final)
+
+#Re-ordering variables and setting to numeric
+SKorea_data <- rename(SKorea_final, GDPCapita = NY.GDP.PCAP.KN, HHConPct = NE.CON.PETC.ZS, GCapFormPct = NE.GDI.TOTL.ZS, GovtConPct = NE.CON.GOVT.ZS, ImpPct = NE.IMP.GNFS.ZS, ExpPct = NE.EXP.GNFS.ZS)
+SKorea_data$GDPCapita <- as.numeric(SKorea_data$GDPCapita)
+SKorea_data$HHConPct <- as.numeric(SKorea_data$HHConPct)
+SKorea_data$GCapFormPct <- as.numeric(SKorea_data$GCapFormPct)
+SKorea_data$GovtConPct <- as.numeric(SKorea_data$GovtConPct)
+SKorea_data$ImpPct <- as.numeric(SKorea_data$ImpPct)
+SKorea_data$ExpPct <- as.numeric(SKorea_data$ExpPct)
+SKorea_data$YEAR <- as.numeric(SKorea_data$YEAR)
+SKorea_data$logGDP<-log(SKorea_data$GDPCapita)
+
+View(SKorea_data)
+
 ```
 
 US data
@@ -102,37 +118,38 @@ Countryb <- as.list(rep("US", 52))
 length(Countryb)
 countryb <- as.data.frame(Countryb)
 #View(countryb)
+
 countryb2 <- t(countryb)
 #View(countryb2)
 US6 <- cbind(US5, countryb2)
-View(US6)
-#Create year variable 
+#View(US6)
+
+#Name year variable 
 US_final <- tibble::rownames_to_column(US6, "YEAR")
 US_final <- rename(US_final, COUNTRY = countryb2)
 US_final <- select(US_final, "YEAR", "COUNTRY", "NY.GDP.PCAP.KN", "NE.GDI.TOTL.ZS", "NE.CON.GOVT.ZS", "NE.IMP.GNFS.ZS", "NE.EXP.GNFS.ZS", "NE.CON.PETC.ZS")
+US_final <- filter(US_final, YEAR >= "1965")
 View(US_final)
+
+#Re-ordering variables and setting to numeric
+US_data <- rename(US_final, GDPCapita = NY.GDP.PCAP.KN, HHConPct = NE.CON.PETC.ZS, GCapFormPct = NE.GDI.TOTL.ZS, GovtConPct = NE.CON.GOVT.ZS, ImpPct = NE.IMP.GNFS.ZS, ExpPct = NE.EXP.GNFS.ZS)
+US_data$GDPCapita <- as.numeric(US_data$GDPCapita)
+US_data$HHConPct <- as.numeric(US_data$HHConPct)
+US_data$GCapFormPct <- as.numeric(US_data$GCapFormPct)
+US_data$GovtConPct <- as.numeric(US_data$GovtConPct)
+US_data$ImpPct <- as.numeric(US_data$ImpPct)
+US_data$ExpPct <- as.numeric(US_data$ExpPct)
+US_data$YEAR <- as.numeric(US_data$YEAR)
+US_data$logGDP<-log(US_data$GDPCapita)
+View(US_data)
 
 ```
 
 ## Merge data sets
 ```{r}
-GDP_data <- rbind(SKorea_final, US_final)
-GDP_data <- rename(GDP_data, GDPCapita = NY.GDP.PCAP.KN, HHConPct = NE.CON.PETC.ZS, GCapFormPct = NE.GDI.TOTL.ZS, GovtConPct = NE.CON.GOVT.ZS, ImpPct = NE.IMP.GNFS.ZS, ExpPct = NE.EXP.GNFS.ZS)
-GDP_data$GDPCapita <- as.numeric(GDP_data$GDPCapita)
-GDP_data$HHConPct <- as.numeric(GDP_data$HHConPct)
-GDP_data$GCapFormPct <- as.numeric(GDP_data$GCapFormPct)
-GDP_data$GovtConPct <- as.numeric(GDP_data$GovtConPct)
-GDP_data$ImpPct <- as.numeric(GDP_data$ImpPct)
-GDP_data$ExpPct <- as.numeric(GDP_data$ExpPct)
+GDP_data <- rbind(SKorea_data, US_data)
 View(GDP_data)
 ```
-
-## Read data from Excel file and create a logged measure of real GDP
-```{r}
-#Find log Real GDP
-GDP_data$logGDP<-log(GDP_data$GDPCapita)
-```
-
 
 ## Compute the relevant business-cycle statistics for the following alternative detrending methods
 i. HP filtering with lambda= 100
@@ -140,18 +157,42 @@ ii. HP filtering with lambda= 6.25
 
 ## Use Hodrick-Prescott filter to estimate cylce and secular components of time series.
 ```{r}
-#Logged GDP/capita with lambda
-gdp.hp<-hpfilter(GDP_data$logGDP, freq = 100,type = "lambda")
-GDP_data$gdp_T<-gdp.hp$trend
-GDP_data$gdp_C<-gdp.hp$cycle
-head(GDP_data)
+#Logged GDP/capita with lambda 100
+gdp.hp_US_100<-hpfilter(US_data$logGDP, freq = 100,type = "lambda")
+US_data$gdp_T_100<-gdp.hp_US_100$trend
+US_data$gdp_C_100<-gdp.hp_US_100$cycle
 
-#Logged GDP/capita
-gdp.hp<-hpfilter(GDP_data$logGDP, freq = 100,type = "lambda")
-GDP_data$gdp_T<-gdp.hp$trend
-GDP_data$gdp_C<-gdp.hp$cycle
-head(GDP_data)
+#Logged GDP/capita with lambda 6.25
+gdp.hp_US_6<-hpfilter(US_data$logGDP, freq = 6.25,type = "lambda")
+US_data$gdp_T_6<-gdp.hp_US_6$trend
+US_data$gdp_C_6<-gdp.hp_US_6$cycle
 
+#Household consumption as pct of GDP
+HHCons.hp_US<-hpfilter(US_data$HHConPct, freq = 100,type = "lambda") #not working since US missing data from '60-65
+US_data$HHCons_T<-HHCons.hp_US$trend
+US_data$HHCons_C<-HHCons.hp_US$cycle
+
+#Gross capital formation as pct of GDP
+GCapForm.hp_US<-hpfilter(US_data$GCapFormPct, freq = 100,type = "lambda") #not working since US missing data from '60-65
+US_data$GCapForm_T<-GCapForm.hp_US$trend
+US_data$GCapForm_C<-GCapForm.hp_US$cycle
+
+#Government consumption as pct of GDP
+GovtConPct.hp_US<-hpfilter(US_data$GovtConPct, freq = 100,type = "lambda")
+US_data$GovtConPct_T<-GovtConPct.hp_US$trend
+US_data$GovtConPct_C<-GovtConPct.hp_US$cycle
+
+#Imports as pct of GDP
+ImpPct.hp_US<-hpfilter(US_data$ImpPct, freq = 100,type = "lambda")
+US_data$ImpPct_T<-ImpPct.hp_US$trend
+US_data$ImpPct_C<-ImpPct.hp_US$cycle
+
+#Exports as pct of GDP
+ExpPct.hp_US<-hpfilter(US_data$ExpPct, freq = 100,type = "lambda")
+US_data$ExpPct_T<-ExpPct.hp_US$trend
+US_data$ExpPct_C<-ExpPct.hp_US$cycle
+
+View(US_data)
 ```
 
 
@@ -159,22 +200,50 @@ head(GDP_data)
 * On the first, draw the raw data and the secular trend estimate. 
 * On the second draw the GDP cycle estimate.
 
-
 ```{r}
-plot1<-ggplot(data=gdp_data)+ 
-geom_line(aes(x=ryear,y=lgdp,color='Log GDP'),size=1.5) + geom_line(aes(x=ryear,y=gdp_T,color='Log GDP Secular'),linetype=2,size=1.5) +xlab("Year")+ylab("")+scale_colour_manual(name="",values=c('Log GDP'='blue','Log GDP Secular'='red'))+ggtitle('GDP Trend')+theme(plot.title = element_text(hjust = 0.5))
-```
-```{r}
-plot2<-ggplot(data=gdp_data)+ 
-geom_line(aes(x=ryear,y=gdp_C,color='Log GDP Cycle'),size=1.5,linetype=2)  +xlab("Year")+ylab("")+scale_colour_manual(name="",values=c('Log GDP Cycle'='blue'))+ggtitle('GDP Cycle')+theme(plot.title = element_text(hjust = 0.5))
-```
-
-
-
-```{r}
-plot_grid(plot1, plot2,ncol = 1,align = 'v')
+plot1<-ggplot(data=US_data)+ 
+  geom_line(aes(x=YEAR,y=logGDP,color='Log GDP', group=1),size=1.5) + 
+  geom_line(aes(x=YEAR,y=gdp_T_100,color='Log GDP Secular', group=1),linetype=2,size=1.5) +
+  xlab("Year")+
+  ylab("")+
+  scale_colour_manual(name="",values=c('Log GDP'='blue','Log GDP Secular'='red'))+
+  ggtitle('US GDP Trend')+
+  theme(plot.title = element_text(hjust = 0.5))
 ```
 
-## Make a 2x2 graph showing the natural logarithm of real per capita GDP and the trend, one panel per trend
-- Discuss how the detrending method influences the volatility of the cyclical component of outpt
+```{r}
+plot2<-ggplot(data=US_data)+ 
+geom_line(aes(x=YEAR,y=gdp_C_100,color='Log GDP Cycle'),size=1.5,linetype=2)  +xlab("Year")+ylab("")+scale_colour_manual(name="",values=c('Log GDP Cycle'='blue'))+ggtitle('GDP Cycle')+theme(plot.title = element_text(hjust = 0.5))
+```
+
+```{r}
+plot3<-ggplot(data=US_data)+ 
+  geom_line(aes(x=YEAR,y=logGDP,color='Log GDP', group=1),size=1.5) + 
+  geom_line(aes(x=YEAR,y=gdp_T_6,color='Log GDP Secular', group=1),linetype=2,size=1.5) +
+  xlab("Year")+
+  ylab("")+
+  scale_colour_manual(name="",values=c('Log GDP'='blue','Log GDP Secular'='red'))+
+  ggtitle('US GDP Trend')+
+  theme(plot.title = element_text(hjust = 0.5))
+```
+
+```{r}
+plot4<-ggplot(data=US_data)+ 
+geom_line(aes(x=YEAR,y=gdp_C_6,color='Log GDP Cycle'),size=1.5,linetype=2)  +xlab("Year")+ylab("")+scale_colour_manual(name="",values=c('Log GDP Cycle'='blue'))+ggtitle('GDP Cycle')+theme(plot.title = element_text(hjust = 0.5))
+```
+
+
+```{r}
+plot_grid(plot1, plot2, ncol = 1,align = 'v')
+```
+
+```{r}
+plot_grid(plot3, plot4, ncol = 1,align = 'v')
+```
+
+
+## Discussion
+- Discuss how the detrending method influences the volatility of the cyclical component of output
+Using a larger lambda results in smoother business cycles and does not emphasize as much GDP fluctuation, 
+
 - Discuss which detrending method identifies recessions for the United States most in line with the NBER business-cycle dates
