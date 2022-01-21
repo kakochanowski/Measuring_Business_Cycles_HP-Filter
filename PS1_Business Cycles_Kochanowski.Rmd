@@ -18,34 +18,27 @@ library(cowplot) #Allows for side by side graphs
 
 ## Read data from Excel file and select relevant fields
 ```{r}
-#Kiersten's WD
-getwd()
+#Kiersten's WD==getwd()
 #install.packages("readxl")
 library(readxl)
 original <- read_excel("/Users/Kiersten/Documents/School/Session 3/Macro/Measuring_Business_Cycles_HP-Filter/Data/usg_data_annual.xls")
 #View(original)
 #Select United States and South Korea data
 GDP1<- filter(original, Country_Name=="United States" | Country_Name=="Korea, Rep.")
-#View(GDP1)
 
 #Filter for relevant business-cycle statistics
 GDP2 <- filter(GDP1, Indicator_Code=="NY.GDP.PCAP.KN" | Indicator_Code=="NE.CON.PETC.ZS" | Indicator_Code=="NE.GDI.TOTL.ZS" | Indicator_Code=="NE.CON.GOVT.ZS" | Indicator_Code=="NE.IMP.GNFS.ZS" | Indicator_Code=="NE.EXP.GNFS.ZS")
-#View(GDP2)
 ```
 
-## Restructuring data so year is its own unique variable
+**Restructuring data so year is its own unique variable**
 South Korea data
-
 ```{r}
 #Separating DFs by country to make restructuring simpler (maybe)
 SKorea<- filter(GDP2, Country_Name=="Korea, Rep.")
-#View(SKorea)
 
 #Remove first three columns in order to transpose
 SKorea2 <- t(SKorea)
-#View(SKorea2)
 SKorea3 <- SKorea2[-c(1,2,3),]
-#View(SKorea3)
 
 #Change values to numeric
 SKorea3 <- as.data.frame(SKorea3)
@@ -55,25 +48,19 @@ SKorea4 <- SKorea3 %>%
   select(V1, V2, V3, V4, V5, V6) %>%
   rename(NY.GDP.PCAP.KN = V1, NE.GDI.TOTL.ZS = V2, NE.CON.GOVT.ZS = V3, NE.IMP.GNFS.ZS = V4, NE.EXP.GNFS.ZS = V5, NE.CON.PETC.ZS = V6)
 
-#View(SKorea4)
 SKorea5 <- SKorea4[-c(1),]
-#View(SKorea5)
 
 #Add Country variable
 Country <- as.list(rep("S. Korea", 52))
 length(Country)
 country <- as.data.frame(Country)
-#View(country)
 country2 <- t(country)
-#View(country2)
 SKorea6 <- cbind(SKorea5, country2)
-#View(SKorea6)
 
 #Name year variable 
 SKorea_final <- tibble::rownames_to_column(SKorea6, "YEAR")
 SKorea_final <- rename(SKorea_final, COUNTRY = country2)
 SKorea_final <- select(SKorea_final, "YEAR", "COUNTRY", "NY.GDP.PCAP.KN", "NE.GDI.TOTL.ZS", "NE.CON.GOVT.ZS", "NE.IMP.GNFS.ZS", "NE.EXP.GNFS.ZS", "NE.CON.PETC.ZS")
-View(SKorea_final)
 
 #Re-ordering variables and setting to numeric
 SKorea_data <- rename(SKorea_final, GDPCapita = NY.GDP.PCAP.KN, HHConPct = NE.CON.PETC.ZS, GCapFormPct = NE.GDI.TOTL.ZS, GovtConPct = NE.CON.GOVT.ZS, ImpPct = NE.IMP.GNFS.ZS, ExpPct = NE.EXP.GNFS.ZS)
@@ -86,8 +73,6 @@ SKorea_data$ExpPct <- as.numeric(SKorea_data$ExpPct)
 SKorea_data$YEAR <- as.numeric(SKorea_data$YEAR)
 SKorea_data$logGDP<-log(SKorea_data$GDPCapita)
 
-View(SKorea_data)
-
 ```
 
 US data
@@ -95,11 +80,9 @@ US data
 US<- filter(GDP2, Country_Name=="United States")
 #View(US)
 
-#Remove first three columns in order to transpose
+#Remove first three rows in order to transpose
 US2 <- t(US)
-#View(US2)
 US3 <- US2[-c(1,2,3),]
-#View(US3)
 
 #Change values to numeric
 US3 <- as.data.frame(US3)
@@ -108,28 +91,20 @@ US3 <- as.data.frame(US3)
 US4 <- US3 %>%
   select(V1, V2, V3, V4, V5, V6) %>%
   rename(NY.GDP.PCAP.KN = V1, NE.GDI.TOTL.ZS = V2, NE.CON.GOVT.ZS = V3, NE.IMP.GNFS.ZS = V4, NE.EXP.GNFS.ZS = V5, NE.CON.PETC.ZS = V6)
-
-#View(US4)
 US5 <- US4[-c(1),]
-#View(US5)
 
 #Add Country variable
 Countryb <- as.list(rep("US", 52))
 length(Countryb)
 countryb <- as.data.frame(Countryb)
-#View(countryb)
-
 countryb2 <- t(countryb)
-#View(countryb2)
 US6 <- cbind(US5, countryb2)
-#View(US6)
 
 #Name year variable 
 US_final <- tibble::rownames_to_column(US6, "YEAR")
 US_final <- rename(US_final, COUNTRY = countryb2)
 US_final <- select(US_final, "YEAR", "COUNTRY", "NY.GDP.PCAP.KN", "NE.GDI.TOTL.ZS", "NE.CON.GOVT.ZS", "NE.IMP.GNFS.ZS", "NE.EXP.GNFS.ZS", "NE.CON.PETC.ZS")
 US_final <- filter(US_final, YEAR >= "1965")
-View(US_final)
 
 #Re-ordering variables and setting to numeric
 US_data <- rename(US_final, GDPCapita = NY.GDP.PCAP.KN, HHConPct = NE.CON.PETC.ZS, GCapFormPct = NE.GDI.TOTL.ZS, GovtConPct = NE.CON.GOVT.ZS, ImpPct = NE.IMP.GNFS.ZS, ExpPct = NE.EXP.GNFS.ZS)
@@ -141,21 +116,20 @@ US_data$ImpPct <- as.numeric(US_data$ImpPct)
 US_data$ExpPct <- as.numeric(US_data$ExpPct)
 US_data$YEAR <- as.numeric(US_data$YEAR)
 US_data$logGDP<-log(US_data$GDPCapita)
-View(US_data)
 
 ```
 
-## Merge data sets
+##Merge data sets
 ```{r}
 GDP_data <- rbind(SKorea_data, US_data)
 View(GDP_data)
 ```
 
-## Compute the relevant business-cycle statistics for the following alternative detrending methods
-i. HP filtering with lambda= 100
-ii. HP filtering with lambda= 6.25
 
+**US Business Cycle**
 ## Use Hodrick-Prescott filter to estimate cylce and secular components of time series.
+- De-trend with HP Filter
+- Express in terms of percentage deviation from trend
 ```{r}
 #Logged GDP/capita with lambda 100
 gdp.hp_US_100<-hpfilter(US_data$logGDP, freq = 100,type = "lambda")
@@ -167,47 +141,421 @@ gdp.hp_US_6<-hpfilter(US_data$logGDP, freq = 6.25,type = "lambda")
 US_data$gdp_T_6<-gdp.hp_US_6$trend
 US_data$gdp_C_6<-gdp.hp_US_6$cycle
 
-#Household consumption as pct of GDP
-HHCons.hp_US<-hpfilter(US_data$HHConPct, freq = 100,type = "lambda") #not working since US missing data from '60-65
-US_data$HHCons_T<-HHCons.hp_US$trend
-US_data$HHCons_C<-HHCons.hp_US$cycle
+#Household consumption as pct of GDP with lambda 100
+HHCons.hp_US<-hpfilter(US_data$HHConPct, freq = 100,type = "lambda") 
+US_data$HHCons_T_100<-HHCons.hp_US$trend
+US_data$HHCons_C_100<-HHCons.hp_US$cycle
 
-#Gross capital formation as pct of GDP
-GCapForm.hp_US<-hpfilter(US_data$GCapFormPct, freq = 100,type = "lambda") #not working since US missing data from '60-65
-US_data$GCapForm_T<-GCapForm.hp_US$trend
-US_data$GCapForm_C<-GCapForm.hp_US$cycle
+#Household consumption as pct of GDP with lambda 6.25
+HHCons.hp_US<-hpfilter(US_data$HHConPct, freq = 6.25,type = "lambda")
+US_data$HHCons_T_6<-HHCons.hp_US$trend
+US_data$HHCons_C_6<-HHCons.hp_US$cycle
 
-#Government consumption as pct of GDP
+#Gross capital formation as pct of GDP with lambda 100
+GCapForm.hp_US<-hpfilter(US_data$GCapFormPct, freq = 100,type = "lambda") 
+US_data$GCapForm_T_100<-GCapForm.hp_US$trend
+US_data$GCapForm_C_100<-GCapForm.hp_US$cycle
+
+#Gross capital formation as pct of GDP with lambda 6.25
+GCapForm.hp_US<-hpfilter(US_data$GCapFormPct, freq = 6.25,type = "lambda")
+US_data$GCapForm_T_6<-GCapForm.hp_US$trend
+US_data$GCapForm_C_6<-GCapForm.hp_US$cycle
+
+#Government consumption as pct of GDP with lambda 100
 GovtConPct.hp_US<-hpfilter(US_data$GovtConPct, freq = 100,type = "lambda")
-US_data$GovtConPct_T<-GovtConPct.hp_US$trend
-US_data$GovtConPct_C<-GovtConPct.hp_US$cycle
+US_data$GovtConPct_T_100<-GovtConPct.hp_US$trend
+US_data$GovtConPct_C_100<-GovtConPct.hp_US$cycle
 
-#Imports as pct of GDP
+#Government consumption as pct of GDP with lambda 6.25
+GovtConPct.hp_US<-hpfilter(US_data$GovtConPct, freq = 6.25,type = "lambda")
+US_data$GovtConPct_T_6<-GovtConPct.hp_US$trend
+US_data$GovtConPct_C_6<-GovtConPct.hp_US$cycle
+
+#Imports as pct of GDP with lambda 100
 ImpPct.hp_US<-hpfilter(US_data$ImpPct, freq = 100,type = "lambda")
-US_data$ImpPct_T<-ImpPct.hp_US$trend
-US_data$ImpPct_C<-ImpPct.hp_US$cycle
+US_data$ImpPct_T_100<-ImpPct.hp_US$trend
+US_data$ImpPct_C_100<-ImpPct.hp_US$cycle
 
-#Exports as pct of GDP
+#Imports as pct of GDP with lambda 6.25
+ImpPct.hp_US<-hpfilter(US_data$ImpPct, freq = 6.25,type = "lambda")
+US_data$ImpPct_T_6<-ImpPct.hp_US$trend
+US_data$ImpPct_C_6<-ImpPct.hp_US$cycle
+
+#Exports as pct of GDP with lambda 100
 ExpPct.hp_US<-hpfilter(US_data$ExpPct, freq = 100,type = "lambda")
-US_data$ExpPct_T<-ExpPct.hp_US$trend
-US_data$ExpPct_C<-ExpPct.hp_US$cycle
+US_data$ExpPct_T_100<-ExpPct.hp_US$trend
+US_data$ExpPct_C_100<-ExpPct.hp_US$cycle
+
+#Exports as pct of GDP with lambda 6.25
+ExpPct.hp_US<-hpfilter(US_data$ExpPct, freq = 6.25,type = "lambda")
+US_data$ExpPct_T_6<-ExpPct.hp_US$trend
+US_data$ExpPct_C_6<-ExpPct.hp_US$cycle
 
 View(US_data)
 ```
 
 
-## Draw two figures. 
-* On the first, draw the raw data and the secular trend estimate. 
-* On the second draw the GDP cycle estimate.
+**South Korea Business Cycle**
+- De-trend with HP Filter
+- Express in terms of percentage deviation from trend
 
+```{r}
+#Logged GDP/capita with lambda 100
+gdp.hp_SK_100<-hpfilter(SKorea_data$logGDP, freq = 100,type = "lambda")
+SKorea_data$gdp_T_100<-gdp.hp_SK_100$trend
+SKorea_data$gdp_C_100<-gdp.hp_SK_100$cycle
+
+#Logged GDP/capita with lambda 6.25
+gdp.hp_SK_6<-hpfilter(SKorea_data$logGDP, freq = 6.25,type = "lambda")
+SKorea_data$gdp_T_6<-gdp.hp_SK_6$trend
+SKorea_data$gdp_C_6<-gdp.hp_SK_6$cycle
+
+#Household consumption as pct of GDP with lambda 100
+HHCons.hp_SK<-hpfilter(SKorea_data$HHConPct, freq = 100,type = "lambda") #not working since US missing data from '60-65
+SKorea_data$HHCons_T_100<-HHCons.hp_SK$trend
+SKorea_data$HHCons_C_100<-HHCons.hp_SK$cycle
+
+#Household consumption as pct of GDP with lambda 6.25
+HHCons.hp_SK<-hpfilter(SKorea_data$HHConPct, freq = 6.25,type = "lambda") #not working since US missing data from '60-65
+SKorea_data$HHCons_T_6<-HHCons.hp_SK$trend
+SKorea_data$HHCons_C_6<-HHCons.hp_SK$cycle
+
+#Gross capital formation as pct of GDP with lambda 100
+GCapForm.hp_SK<-hpfilter(SKorea_data$GCapFormPct, freq = 100,type = "lambda") #not working since US missing data from '60-65
+SKorea_data$GCapForm_T_100<-GCapForm.hp_SK$trend
+SKorea_data$GCapForm_C_100<-GCapForm.hp_SK$cycle
+
+#Gross capital formation as pct of GDP with lambda 6.25
+GCapForm.hp_SK<-hpfilter(SKorea_data$GCapFormPct, freq = 6.25,type = "lambda") #not working since US missing data from '60-65
+SKorea_data$GCapForm_T_6<-GCapForm.hp_SK$trend
+SKorea_data$GCapForm_C_6<-GCapForm.hp_SK$cycle
+
+#Government consumption as pct of GDP with lambda 100
+GovtConPct.hp_SK<-hpfilter(SKorea_data$GovtConPct, freq = 100,type = "lambda")
+SKorea_data$GovtConPct_T_100<-GovtConPct.hp_SK$trend
+SKorea_data$GovtConPct_C_100<-GovtConPct.hp_SK$cycle
+
+#Government consumption as pct of GDP with lambda 6.25
+GovtConPct.hp_SK<-hpfilter(SKorea_data$GovtConPct, freq = 6.25,type = "lambda")
+SKorea_data$GovtConPct_T_6<-GovtConPct.hp_SK$trend
+SKorea_data$GovtConPct_C_6<-GovtConPct.hp_SK$cycle
+
+#Imports as pct of GDP with lambda 100
+ImpPct.hp_SK<-hpfilter(SKorea_data$ImpPct, freq = 100,type = "lambda")
+SKorea_data$ImpPct_T_100<-ImpPct.hp_SK$trend
+SKorea_data$ImpPct_C_100<-ImpPct.hp_SK$cycle
+
+#Imports as pct of GDP with lambda 6.25
+ImpPct.hp_SK<-hpfilter(SKorea_data$ImpPct, freq = 6.25,type = "lambda")
+SKorea_data$ImpPct_T_6<-ImpPct.hp_SK$trend
+SKorea_data$ImpPct_C_6<-ImpPct.hp_SK$cycle
+
+#Exports as pct of GDP with lambda 100
+ExpPct.hp_SK<-hpfilter(SKorea_data$ExpPct, freq = 100,type = "lambda")
+SKorea_data$ExpPct_T_100<-ExpPct.hp_SK$trend
+SKorea_data$ExpPct_C_100<-ExpPct.hp_SK$cycle
+
+#Exports as pct of GDP with lambda 6.25
+ExpPct.hp_SK<-hpfilter(SKorea_data$ExpPct, freq = 6.25,type = "lambda")
+SKorea_data$ExpPct_T_6<-ExpPct.hp_SK$trend
+SKorea_data$ExpPct_C_6<-ExpPct.hp_SK$cycle
+
+View(SKorea_data)
+```
+
+**Business Cycle Statistics**
+- US: Calculate the standard deviations, correlation with GDP, and serial correlations (as a percent deviation from the trend)
+GDP
+```{r}
+US_table_100 <- data.frame(matrix(ncol = 6, nrow = 1))
+US_table_6 <- data.frame(matrix(ncol = 6, nrow = 1))
+GDP_US_100 <- US_data$gdp_C_100*100
+GDP_US_6 <- US_data$gdp_C_6*100
+
+US_table_100$GDP_100_sd <- sd(GDP_US_100)
+US_table_6$GDP_6_sd <- sd(GDP_US_6)
+
+US_table_100$GDP_100_cor <- cor(GDP_US_100, y=GDP_US_100)
+US_table_6$GDP_6_cor <- cor(GDP_US_6, y=GDP_US_6)
+
+#US_table_100$GDP_100_acf <- mean(acf(GDP_US_100, lag=length(GDP_US_100)-1, correlation=TRUE, pl=FALSE))
+#US_table_6$GDP_6_acf <- mean(acf(GDP_US_6, lag=length(GDP_US_6)-1, correlation=TRUE, pl=FALSE))
+```
+
+Consumption
+```{r}
+Cons_US_100 <- US_data$HHCons_C_100
+Cons_US_6 <- US_data$HHCons_C_6
+
+US_table_100$Cons_100_sd <- sd(Cons_US_100)
+US_table_6$Cons_6_sd <- sd(Cons_US_6)
+
+US_table_100$Cons_100_cor <- cor(Cons_US_100, y=GDP_US_100)
+US_table_6$Cons_6_cor <- cor(Cons_US_6, y=GDP_US_6)
+
+#ACF_cons_100_US <- as.numeric(acf(Cons_US_100, lag.max=1, correlation=TRUE, pl=FALSE))
+#US_table_100$Cons_100_acf <- mean(ACF_cons_100_US)
+#ACF_cons_6_US <- as.numeric(acf(Cons_US_100, lag.max=1, correlation=TRUE, pl=FALSE))
+#US_table_6$Cons_6_acf <- mean(ACF_cons_100_US)
+```
+
+Government spending
+```{r}
+Govt_US_100 <- ((US_data$GovtConPct_C_100)-(US_data$GovtConPct_T_100))/(US_data$GovtConPct_T_100)
+Govt_US_6 <- ((US_data$GovtConPct_C_6)-(US_data$GovtConPct_T_6))/(US_data$GovtConPct_T_6)
+
+US_table_100$Govt_100_sd <- sd(Govt_US_100)
+US_table_6$Govt_6_sd <- sd(Govt_US_6)
+
+US_table_100$Govt_100_cor <- cor(Govt_US_100, y=GDP_US_100)
+US_table_6$Govt_6_cor <- cor(Govt_US_6, y=GDP_US_6)
+
+#US_table_100$Govt_100_acf <- acf(Govt_US_100, lag=length(Govt_US_100)-1, correlation=TRUE, pl=FALSE)
+#US_table_6$Govt_6_acf <- acf(Govt_US_6, lag=length(Govt_US_6)-1, correlation=TRUE, pl=FALSE)
+```
+
+Investment
+```{r}
+Inv_US_100 <- ((US_data$GCapForm_C_100)-(US_data$GCapForm_T_100))/(US_data$GCapForm_T_100)
+Inv_US_6 <- ((US_data$GCapForm_C_6)-(US_data$GCapForm_T_6))/(US_data$GCapForm_T_6)
+
+US_table_100$Inv_100_sd <- sd(Inv_US_100)
+US_table_6$Inv_6_sd <- sd(Inv_US_6)
+
+US_table_100$Inv_100_cor <- cor(Inv_US_100, y=GDP_US_100)
+US_table_6$Inv_6_cor <- cor(Inv_US_6 , y=GDP_US_6)
+
+#US_table_100$Inv_100_acf <- acf(Inv_US_100, lag=length(Inv_US_100)-1, correlation=TRUE, pl=FALSE)
+#US_table_6$Inv_6_acf <- acf(Inv_US_6, lag=length(Inv_US_6)-1, correlation=TRUE, pl=FALSE)
+```
+
+Imports
+```{r}
+Imp_US_100 <- ((US_data$ImpPct_C_100)-(US_data$ImpPct_T_100))/(US_data$ImpPct_T_100)
+Imp_US_6 <- ((US_data$ImpPct_C_6)-(US_data$ImpPct_T_6))/(US_data$ImpPct_T_6)
+
+US_table_100$Imp_100_sd <- sd(Imp_US_100)
+US_table_6$Imp_6_sd <- sd(Imp_US_6)
+
+US_table_100$Imp_100_cor <- cor(Imp_US_100, y=GDP_US_100)
+US_table_6$Imp_6_cor <- cor(Imp_US_6, y=GDP_US_6)
+
+#US_table_100$Inv_100_acf <- acf(Inv_US_100, lag=length(Inv_US_100)-1, correlation=TRUE, pl=FALSE)
+#US_table_6$Inv_6_acf <- acf(Inv_US_6, lag=length(Inv_US_6)-1, correlation=TRUE, pl=FALSE)
+```
+
+Exports
+```{r}
+Exp_US_100 <- ((US_data$ExpPct_C_100)-(US_data$ExpPct_T_100))/(US_data$ExpPct_T_100)
+Exp_US_6 <- ((US_data$ExpPct_C_6)-(US_data$ExpPct_T_6))/(US_data$ExpPct_T_6)
+
+US_table_100$Exp_100_sd <- sd(Exp_US_100)
+US_table_6$Exp_6_sd <- sd(Exp_US_6)
+
+US_table_100$Exp_100_cor <- cor(Exp_US_100, y=GDP_US_100)
+US_table_6$Exp_6_cor <- cor(Exp_US_6, y=GDP_US_6)
+
+#US_table_100$Inv_100_acf <- acf(Inv_US_100, lag=length(Inv_US_100)-1, correlation=TRUE, pl=FALSE)
+#US_table_6$Inv_6_acf <- acf(Inv_US_6, lag=length(Inv_US_6)-1, correlation=TRUE, pl=FALSE)
+```
+
+
+- South Korea: Calculate the standard deviations, correlation with GDP, and serial correlations (as a percent deviation from the trend)
+GDP
+```{r}
+SK_table_100 <- data.frame(matrix(ncol = 6, nrow = 1))
+SK_table_6 <- data.frame(matrix(ncol = 6, nrow = 1))
+GDP_SK_100 <- SKorea_data$gdp_C_100*100
+GDP_SK_6 <- SKorea_data$gdp_C_6*100
+
+SK_table_100$GDP_100_sd <- sd(GDP_SK_100)
+SK_table_6$GDP_6_sd <- sd(GDP_SK_6)
+
+SK_table_100$GDP_SK_100_cor <- cor(GDP_SK_100, y=GDP_SK_100)
+SK_table_6$GDP_SK_6_cor <- cor(GDP_SK_6, y=GDP_SK_6)
+
+#SK_table_100$GDP_SK_100_acf <- acf(GDP_SK_100, lag=length(GDP_SK_100)-1, correlation=TRUE, pl=FALSE)
+#SK_table_6$GDP_SK_6_acf <- acf(GDP_SK_6, lag=length(GDP_SK_6)-1, correlation=TRUE, pl=FALSE)
+```
+
+Consumption
+```{r}
+Cons_SK_100 <- ((SKorea_data$HHCons_C_100)-(SKorea_data$HHCons_T_100))/(SKorea_data$HHCons_T_100)
+Cons_SK_6 <- ((SKorea_data$HHCons_C_6)-(SKorea_data$HHCons_T_6))/(SKorea_data$HHCons_T_6)
+
+SK_table_100$Cons_100_sd <- sd(Cons_SK_100)
+SK_table_6$Cons_6_sd <- sd(Cons_SK_6)
+
+SK_table_100$Cons_100_cor <- cor(Cons_SK_100, y=GDP_SK_100)
+SK_table_6$Cons_6_cor <- cor(Cons_SK_6, y=GDP_SK_6)
+
+#SK_table_100$Cons_100_acf <- acf(Cons_SK_100, lag=length(Cons_SK_100)-1, correlation=TRUE, pl=FALSE)
+#SK_table_6$Cons_6_acf <- acf(Cons_SK_6, lag=length(Cons_SK_6)-1, correlation=TRUE, pl=FALSE)
+```
+
+Government spending
+```{r}
+Govt_SK_100 <- ((SKorea_data$GovtConPct_C_100)-(SKorea_data$GovtConPct_T_100))/(SKorea_data$GovtConPct_T_100)
+Govt_SK_6 <- ((SKorea_data$GovtConPct_C_6)-(SKorea_data$GovtConPct_T_6))/(SKorea_data$GovtConPct_T_6)
+
+SK_table_100$Govt_100_sd <- sd(Govt_SK_100)
+SK_table_6$Govt_6_sd <- sd(Govt_SK_6)
+
+SK_table_100$Govt_100_cor <- cor(Govt_SK_100, y=GDP_SK_100)
+SK_table_6$Govt_6_cor <- cor(Govt_SK_6, y=GDP_SK_6)
+
+#SK_table$Govt_100_acf <- acf(Govt_SK_100, lag=length(Govt_SK_100)-1, correlation=TRUE, pl=FALSE)
+#SK_table_6$Govt_6_acf <- acf(Govt_SK_6, lag=length(Govt_SK_6)-1, correlation=TRUE, pl=FALSE)
+```
+
+Investment
+```{r}
+Inv_SK_100 <- ((SKorea_data$GCapForm_C_100)-(SKorea_data$GCapForm_T_100))/(SKorea_data$GCapForm_T_100)
+Inv_SK_6 <- ((SKorea_data$GCapForm_C_6)-(SKorea_data$GCapForm_T_6))/(SKorea_data$GCapForm_T_6)
+
+SK_table_100$Inv_100_sd <- sd(Inv_SK_100)
+SK_table_6$Inv_6_sd <- sd(Inv_SK_6)
+
+SK_table_100$Inv_100_cor <- cor(Inv_SK_100, y=GDP_SK_100)
+SK_table_6$Inv_6_cor <- cor(Inv_SK_6 , y=GDP_SK_6)                                                      
+
+#SK_table$Inv_100_acf <- acf(Inv_SK_100, lag=length(Inv_SK_100)-1, correlation=TRUE, pl=FALSE)
+#SK_table_6$Inv_6_acf <- acf(Inv_SK_6, lag=length(Inv_SK_6)-1, correlation=TRUE, pl=FALSE)
+```
+
+Imports
+```{r}
+Imp_SK_100 <- ((SKorea_data$ImpPct_C_100)-(SKorea_data$ImpPct_T_100))/(SKorea_data$ImpPct_T_100)
+Imp_SK_6 <- ((SKorea_data$ImpPct_C_6)-(SKorea_data$ImpPct_T_6))/(SKorea_data$ImpPct_T_6)
+
+SK_table_100$Imp_100_sd <- sd(Imp_SK_100)
+SK_table_6$Imp_6_sd <- sd(Imp_SK_6)
+
+SK_table_100$Imp_100_cor <- cor(Imp_SK_100, y=GDP_SK_100)
+SK_table_6$Imp_6_cor <- cor(Imp_SK_6 , y=GDP_SK_6)
+
+#SK_table_100$Inv_100_acf <- acf(Inv_SK_100, lag=length(Inv_SK_100)-1, correlation=TRUE, pl=FALSE)
+#SK_table_6$Inv_6_acf <- acf(Inv_SK_6, lag=length(Inv_SK_6)-1, correlation=TRUE, pl=FALSE)
+```
+
+Exports
+```{r}
+Exp_SK_100 <- ((SKorea_data$ExpPct_C_100)-(SKorea_data$ExpPct_T_100))/(SKorea_data$ExpPct_T_100)
+Exp_SK_6 <- ((SKorea_data$ExpPct_C_6)-(SKorea_data$ExpPct_T_6))/(SKorea_data$ExpPct_T_6)
+
+SK_table_100$Exp_100_sd <- sd(Exp_SK_100)
+SK_table_6$Exp_6_sd <- sd(Exp_SK_6)
+
+SK_table_100$Exp_100_cor <- cor(Exp_SK_100, y=GDP_SK_100)
+SK_table_6$Exp_6_cor <- cor(Exp_SK_6, y=GDP_SK_6)
+
+#SK_table_100$Exp_100_acf <- acf(Exp_SK_100, lag=length(Exp_SK_100)-1, correlation=TRUE, pl=FALSE)
+#SSK_table_6$Exp_6_acf <- acf(Exp_SK_6, lag=length(Exp_SK_6)-1, correlation=TRUE, pl=FALSE)
+```
+
+**Combine and visualize business cycle statistics**
+Combining data
+```{r}
+#Lambda=100
+#Create combined table with US and SK as rows 
+Ut1 <- t(US_table_100)
+Kt1 <- t(SK_table_100)
+SK_table21 <- as.data.frame(Kt1)
+US_table21 <- as.data.frame(Ut1)
+
+#Rename variable column
+USdatatable1 = US_table21 %>% rename(US = V1)
+SKdatatable1 = SK_table21 %>% rename(SK = V1)
+SK_table_final_100 <- as.data.frame(SKdatatable1[-c(1:6), ])
+US_table_final_100 <- as.data.frame(USdatatable1[-c(1:6), ])
+View(US_table_final_100)
+View(SK_table_final_100)
+
+#Combine two tables
+Table_data100 <- cbind(US_table_final_100, SK_table_final_100)
+F_table_100 <- as.data.frame(Table_data100)
+Final_table_100 <- tibble::rownames_to_column(F_table_100, "MEASURE")
+Final_table_100$lambda <- rep(100, 12)
+View(Final_table_100)
+```
+
+```{r}
+#Lambda=6.25
+#Create combined table with US and SK as rows 
+Ut6 <- t(US_table_6)
+Kt6 <- t(SK_table_6)
+SK_table6 <- as.data.frame(Kt6)
+US_table6 <- as.data.frame(Ut6)
+
+#Rename variable column
+USdatatable6 = US_table6 %>% rename(US = V1)
+SKdatatable6 = SK_table6 %>% rename(SK = V1)
+SK_table_final6 <- SKdatatable6[-c(1:6), ]
+US_table_final6 <- USdatatable6[-c(1:6), ]
+#View(SK_table_final6)
+#View(US_table_final6)
+
+#Combine two tables
+Table_data6 <- cbind(US_table_final6, SK_table_final6)
+F_table_6 <- as.data.frame(Table_data6)
+Final_table_6 <- tibble::rownames_to_column(F_table_6, "MEASURE")
+Final_table_6$lambda <- rep(6, 12)
+View(Final_table_6)
+
+#Combine final tables
+Final_table6 <- rbind(Final_table_6, Final_table_100)
+View(Final_table6)
+```
+
+
+Package for table configuration
+```{r}
+install.packages("kableExtra")
+library(kableExtra)
+install.packages("knitr")
+library(knitr)
+```
+
+Merging into table
+```{r}
+#Make StatID variable
+Final_table$STAT <- rep(c("sd","cor"), 12)
+#Ordering rows alphabetically by STAT
+Final_table <- Final_table[order(Final_table$STAT), ]
+rownames(Final_table)=NULL
+View(Final_table)
+
+#Table function
+base <- Final_table %>%
+    kbl(align=c(rep("c", 7), rep("r", 5)))
+
+base %>%
+    kable_styling(bootstrap_options = c("striped", "bordered", "condensed", "hover", "responsive"))
+```
+
+```{r}
+kable_styling(bootstrapkbl(Final_table_ordered, caption = "Group Rows") %>%
+  kable_paper("striped", full_width = F) %>%
+  pack_rows("Group 1", 5, 7) %>%
+  pack_rows("Group 2", 5, 10) %>%
+  pack_rows("Group 2", 5, 10)
+```
+
+
+**Business Cycle Visualizations**
+## Draw two figures. 
+- On the first, draw the raw data and the secular trend estimate. 
+- On the second draw the GDP cycle estimate.
+
+#United States
 ```{r}
 plot1<-ggplot(data=US_data)+ 
   geom_line(aes(x=YEAR,y=logGDP,color='Log GDP', group=1),size=1.5) + 
-  geom_line(aes(x=YEAR,y=gdp_T_100,color='Log GDP Secular', group=1),linetype=2,size=1.5) +
+  geom_line(aes(x=YEAR,y=gdp_T_100,color='Log GDP Secular', group=1),linetype=1,size=1.5) +
   xlab("Year")+
   ylab("")+
   scale_colour_manual(name="",values=c('Log GDP'='blue','Log GDP Secular'='red'))+
-  ggtitle('US GDP Trend')+
+  ggtitle('US GDP Trend - Lambda=100')+
   theme(plot.title = element_text(hjust = 0.5))
 ```
 
@@ -219,11 +567,11 @@ geom_line(aes(x=YEAR,y=gdp_C_100,color='Log GDP Cycle'),size=1.5,linetype=2)  +x
 ```{r}
 plot3<-ggplot(data=US_data)+ 
   geom_line(aes(x=YEAR,y=logGDP,color='Log GDP', group=1),size=1.5) + 
-  geom_line(aes(x=YEAR,y=gdp_T_6,color='Log GDP Secular', group=1),linetype=2,size=1.5) +
+  geom_line(aes(x=YEAR,y=gdp_T_6,color='Log GDP Secular', group=1),linetype=1,size=1.5) +
   xlab("Year")+
   ylab("")+
   scale_colour_manual(name="",values=c('Log GDP'='blue','Log GDP Secular'='red'))+
-  ggtitle('US GDP Trend')+
+  ggtitle('US GDP Trend - Lambda=6.25')+
   theme(plot.title = element_text(hjust = 0.5))
 ```
 
@@ -241,9 +589,50 @@ plot_grid(plot1, plot2, ncol = 1,align = 'v')
 plot_grid(plot3, plot4, ncol = 1,align = 'v')
 ```
 
+#South Korea
+```{r}
+plot5<-ggplot(data=SKorea_data)+ 
+  geom_line(aes(x=YEAR,y=logGDP,color='Log GDP', group=1),size=1.5) + 
+  geom_line(aes(x=YEAR,y=gdp_T_100,color='Log GDP Secular', group=1),linetype=1,size=1.5) +
+  xlab("Year")+
+  ylab("")+
+  scale_colour_manual(name="",values=c('Log GDP'='blue','Log GDP Secular'='red'))+
+  ggtitle('South Korea GDP Trend - Lambda=100')+
+  theme(plot.title = element_text(hjust = 0.5))
+```
+
+```{r}
+plot6<-ggplot(data=SKorea_data)+ 
+geom_line(aes(x=YEAR,y=gdp_C_100,color='Log GDP Cycle'),size=1.5,linetype=2)  +xlab("Year")+ylab("")+scale_colour_manual(name="",values=c('Log GDP Cycle'='blue'))+ggtitle('GDP Cycle')+theme(plot.title = element_text(hjust = 0.5))
+```
+
+```{r}
+plot7<-ggplot(data=SKorea_data)+ 
+  geom_line(aes(x=YEAR,y=logGDP,color='Log GDP', group=1),size=1.5) + 
+  geom_line(aes(x=YEAR,y=gdp_T_6,color='Log GDP Secular', group=1),linetype=1,size=1.5) +
+  xlab("Year")+
+  ylab("")+
+  scale_colour_manual(name="",values=c('Log GDP'='blue','Log GDP Secular'='red'))+
+  ggtitle('South Korea GDP Trend - Lambda=6.25')+
+  theme(plot.title = element_text(hjust = 0.5))
+```
+
+```{r}
+plot8<-ggplot(data=SKorea_data)+ 
+geom_line(aes(x=YEAR,y=gdp_C_6,color='Log GDP Cycle'),size=1.5,linetype=2)  +xlab("Year")+ylab("")+scale_colour_manual(name="",values=c('Log GDP Cycle'='blue'))+ggtitle('GDP Cycle')+theme(plot.title = element_text(hjust = 0.5))
+```
+
+```{r}
+plot_grid(plot5, plot6, ncol = 1,align = 'v')
+```
+
+```{r}
+plot_grid(plot7, plot8, ncol = 1,align = 'v')
+```
 
 ## Discussion
 - Discuss how the detrending method influences the volatility of the cyclical component of output
+
 Using a larger lambda results in smoother business cycles and does not emphasize as much GDP fluctuation, 
 
 - Discuss which detrending method identifies recessions for the United States most in line with the NBER business-cycle dates
